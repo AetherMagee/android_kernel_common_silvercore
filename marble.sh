@@ -5,18 +5,18 @@
 DIR=`readlink -f .`
 PARENT_DIR=`readlink -f ${DIR}/..`
 
-export CROSS_COMPILE=$PARENT_DIR/tc/clang-r487747c/bin/aarch64-linux-gnu-
-export CC=$PARENT_DIR/tc/clang-r487747c/bin/clang
+export CROSS_COMPILE=$PARENT_DIR/toolchains/neutron-clang/bin/aarch64-linux-gnu-
+export CC=$PARENT_DIR/toolchains/neutron-clang/bin/clang
 
 export PLATFORM_VERSION=14
 export ANDROID_MAJOR_VERSION=s
-export PATH=$PARENT_DIR/tc/clang-r487747c/bin:$PATH
-export PATH=$PARENT_DIR/tc/build-tools/path/linux-x86:$PATH
-export PATH=$PARENT_DIR/tc/gas/linux-x86:$PATH
+export PATH=$PARENT_DIR/toolchains/neutron-clang/bin:$PATH
+export PATH=$PARENT_DIR/toolchains/build-tools/path/linux-x86:$PATH
+export PATH=$PARENT_DIR/toolchains/gas/linux-x86:$PATH
 export TARGET_SOC=s5e9925
 export LLVM=1 LLVM_IAS=1
 export ARCH=arm64
-# KERNEL_MAKE_ENV="LOCALVERSION=-SilverCore"
+# KERNEL_MAKE_ENV="LOCALVERSION=-PenisCore"
 
 # Color
 ON_BLUE=`echo -e "\033[44m"`	# On Blue
@@ -32,25 +32,25 @@ pause(){
 }
 
 clang(){
-  if [ ! -d $PARENT_DIR/tc/clang-r487747c ]; then
+  if [ ! -d $PARENT_DIR/toolchains/neutron-clang ]; then
     pause 'clone Android Clang/LLVM Prebuilts'
-    git clone https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r487747c $PARENT_DIR/tc/clang-r487747c
+    git clone https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r487747c $PARENT_DIR/toolchains/neutron-clang
     . $DIR/build_menu
   fi
 }
 
 gas(){
-  if [ ! -d $PARENT_DIR/tc/gas/linux-x86 ]; then
+  if [ ! -d $PARENT_DIR/toolchains/gas/linux-x86 ]; then
     pause 'clone prebuilt binaries of GNU `as` (the assembler)'
-    git clone https://android.googlesource.com/platform/prebuilts/gas/linux-x86 $PARENT_DIR/tc/gas/linux-x86
+    git clone https://android.googlesource.com/platform/prebuilts/gas/linux-x86 $PARENT_DIR/toolchains/gas/linux-x86
     . $DIR/build_menu
   fi
 }
 
 build_tools(){
-  if [ ! -d $PARENT_DIR/tc/build-tools ]; then
+  if [ ! -d $PARENT_DIR/toolchains/build-tools ]; then
     pause 'clone prebuilt binaries of build tools'
-    git clone https://android.googlesource.com/platform/prebuilts/build-tools $PARENT_DIR/tc/build-tools
+    git clone https://android.googlesource.com/platform/prebuilts/build-tools $PARENT_DIR/toolchains/build-tools
     . $DIR/build_menu
   fi
 }
@@ -92,6 +92,7 @@ build_kernel(){
   echo "${GREEN}***** Compiling kernel *****${STD}"
   [ ! -d "out" ] && mkdir out
   make -j$(nproc) -C $(pwd) $KERNEL_MAKE_ENV gki_defconfig
+  make -j$(nproc) -C $(pwd) $KERNEL_MAKE_ENV menuconfig
   make -j$(nproc) -C $(pwd) $KERNEL_MAKE_ENV
 
   [ -e arch/arm64/boot/Image.gz ] && cp arch/arm64/boot/Image.gz $(pwd)/out/Image.gz
@@ -113,9 +114,9 @@ anykernel3(){
   variant
   if [ -e $DIR/arch/arm64/boot/Image ]; then
     cd $PARENT_DIR/AnyKernel3
-    git reset --hard
+    # git reset --hard
     cp $DIR/arch/arm64/boot/Image zImage
-    sed -i "s/ExampleKernel by osm0sis/${VARIANT} kernel by saikiran/g" anykernel.sh
+    # sed -i "s/ExampleKernel by osm0sis/${VARIANT} kernel by saikiran/g" anykernel.sh
     zip -r9 $PARENT_DIR/${VARIANT}_kernel_`date '+%Y_%m_%d'`.zip * -x .git README.md *placeholder
     cd $DIR
     pause 'continue'
